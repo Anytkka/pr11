@@ -19,6 +19,7 @@
 		<title> Авторизация </title>
 		
 		<script src="https://code.jquery.com/jquery-1.8.3.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
@@ -57,6 +58,25 @@
 		</div>
 		
 		<script>
+			const secretKey = "qazxswedcvfrtgbn";
+
+			function encryprAES(data, key){
+				var keyHash = CryptoJS.MD5(key);
+				var keyBytes = CryptoJS.enc.Hex.parse(keyHash.toString());
+
+				var iv = CryptoJS.lib.WordArray.random(16);
+
+				var encrypted = CryptoJS.AES.encrypt(data, keyBytes, {
+					iv: iv,
+					mode: CryptoJS.mode.CBC,
+					padding: CryptoJS.pad.Pkcs7
+				});
+				
+				var combined = iv.concat(encrypted.ciphertext);
+
+				return CryptoJS.enc.Base64.stringify(combined);
+			}
+
 			function LogIn() {
 				var loading = document.getElementsByClassName("loading")[0];
 				var button = document.getElementsByClassName("button")[0];
@@ -65,6 +85,9 @@
 				var _password = document.getElementsByName("_password")[0].value;
 				loading.style.display = "block";
 				button.className = "button_diactive";
+
+				_login = encryprAES(_login, secretKey);
+				_password = encryprAES(_password, secretKey);
 				
 				var data = new FormData();
 				data.append("login", _login);
