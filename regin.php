@@ -59,10 +59,29 @@
 		</div>
 		
 		<script>
-			var loading = document.getElementsByClassName("loading")[0];
-			var button = document.getElementsByClassName("button")[0];
-			
+		const secretKey = "qazxswedcvfrtgbn";
+
+			function encryprAES(data, key){
+				var keyHash = CryptoJS.MD5(key);
+				var keyBytes = CryptoJS.enc.Hex.parse(keyHash.toString());
+
+				var iv = CryptoJS.lib.WordArray.random(16);
+
+				var encrypted = CryptoJS.AES.encrypt(data, keyBytes, {
+					iv: iv,
+					mode: CryptoJS.mode.CBC,
+					padding: CryptoJS.pad.Pkcs7
+				});
+				
+				var combined = iv.concat(encrypted.ciphertext);
+
+				return CryptoJS.enc.Base64.stringify(combined);
+			}
+
 			function RegIn() {
+				var loading = document.getElementsByClassName("loading")[0];
+				var button = document.getElementsByClassName("button")[0];
+				
 				var _login = document.getElementsByName("_login")[0].value;
 				var _password = document.getElementsByName("_password")[0].value;
 				var _passwordCopy = document.getElementsByName("_passwordCopy")[0].value;
@@ -73,9 +92,14 @@
 							loading.style.display = "block";
 							button.className = "button_diactive";
 							
+							// Шифруем данные перед отправкой
+							var encryptedLogin = encryprAES(_login, secretKey);
+							var encryptedPassword = encryprAES(_password, secretKey);
+							
 							var data = new FormData();
-							data.append("login", _login);
-							data.append("password", _password);
+							data.append("login", encryptedLogin);
+							data.append("password", encryptedPassword);
+						
 							
 							// AJAX запрос
 							$.ajax({
